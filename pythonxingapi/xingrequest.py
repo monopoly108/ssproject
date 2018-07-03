@@ -2,8 +2,8 @@
 """
 Xing API (info) request module
 
-query: 단일데이터 조회
-query2: 반복데이터 조회
+request function: 단일데이터 조회
+request2 function: 반복데이터 조회
 """
 
 import win32com.client
