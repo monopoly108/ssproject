@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 """
-Xing API Modules
+Xing API login module
 """
 
 import win32com.client
@@ -150,5 +150,4 @@ class ConnectXing(object):
 
 
 if __name__ == "__main__":
-
     pass
