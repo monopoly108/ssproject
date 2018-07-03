@@ -23,7 +23,7 @@ _OUT_BLOCK3 = "tmpnmOutBlock3"
 
 class RequestSessionEventHandler(object):
     """
-    Class for query verification(success / failure).
+    Class for request sessioon verification
     """
     query_state = 0
 
