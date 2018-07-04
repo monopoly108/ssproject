@@ -269,7 +269,7 @@ class RequestXing(object):
         return quote_df
 
     def request2_account_trade_result(self, account_num="", order_pw="",
-                                      mkt_gb="", bid_gb="", trade_gb="",
+                                      mkt_gb="00", bid_gb="0", trade_gb="0",
                                       trd_dt="", res_id="CSPAQ13700"):
         """
         Load trading results of a certain date.
@@ -287,7 +287,7 @@ class RequestXing(object):
         0: 전체
         1: 매도
         2: 매수
-        :param trade_res: 체결구분
+        :param trade_gb: 체결구분
         0: 전체
         1: 체결
         3: 미체결

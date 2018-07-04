@@ -1,4 +1,4 @@
-python 3.x(32bit)
+python 3.4+(32bit)
 win32com
 pythoncom
 pandas>=0.23.1

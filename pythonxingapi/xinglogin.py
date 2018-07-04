@@ -36,6 +36,7 @@ class LoginSessionEventHandler(object):
             LoginSessionEventHandler.login_state = 1
         else:
             print("Login Failed!")
+            exit()
 
 
 class ConnectXing(object):
@@ -79,8 +80,8 @@ class ConnectXing(object):
                 print("Please insert password.")
                 exit()
             if self.cert_pw == "":
-                print("Please insert certification password.")
-                exit()
+                pass
+
             session = win32com.client.DispatchWithEvents(self._session_nm,
                                                     LoginSessionEventHandler)
             session.ConnectServer(self._demo_server_addr, self._server_port)
@@ -132,8 +133,8 @@ class ConnectXing(object):
             for i in range(count):
                 self.account_num_list.append(session.GetAccountList(i))
         else:
-            print("Please Check login_gb. 0 for test server, "
-                  "1 for real server")
+            print("Please Check login_gb. 0 is for test server, "
+                  "1 is for real server")
             return
 
     def get_account_num(self):
@@ -150,4 +151,5 @@ class ConnectXing(object):
 
 
 if __name__ == "__main__":
+
     pass
