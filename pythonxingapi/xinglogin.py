@@ -3,6 +3,7 @@
 Xing API login module
 """
 
+import sys
 import win32com.client
 import pythoncom
 
@@ -36,7 +37,7 @@ class LoginSessionEventHandler(object):
             LoginSessionEventHandler.login_state = 1
         else:
             print("Login Failed!")
-            exit()
+            LoginSessionEventHandler.login_state = 2
 
 
 class ConnectXing(object):
@@ -91,6 +92,10 @@ class ConnectXing(object):
             # Wait until login event finishes(Wait for call back)
             while LoginSessionEventHandler.login_state == 0:
                 pythoncom.PumpWaitingMessages()
+
+            # if login fails exit
+            if LoginSessionEventHandler.login_state == 2:
+                exit()
             print("Test Server Connected")
 
             # get account number
@@ -122,6 +127,10 @@ class ConnectXing(object):
             # Wait until login event finishes(Wait for call back)
             while LoginSessionEventHandler.login_state == 0:
                 pythoncom.PumpWaitingMessages()
+
+            # if login fails exit
+            if LoginSessionEventHandler.login_state == 2:
+                exit()
             print("Real Server Connected")
 
             # get account number

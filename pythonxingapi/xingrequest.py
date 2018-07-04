@@ -445,6 +445,7 @@ class RequestXing(object):
             final_df = final_df.append(account_df, ignore_index=True)
 
         final_df = final_df[final_df["OrdDt"] != ""]
+        RequestSessionEventHandler.query_state = 0
         return final_df
 
     def request2_account_result(self, account_num="", order_pw="",
@@ -568,4 +569,5 @@ class RequestXing(object):
             final_df = final_df.append(account_df, ignore_index=True)
 
         final_df = final_df[final_df["IsuNo"] != ""]
+        RequestSessionEventHandler.query_state = 0
         return final_df

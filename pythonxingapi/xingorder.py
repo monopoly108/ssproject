@@ -335,6 +335,7 @@ class OrderXing(object):
 
         order_res = [OrdNo, PrntOrdNo, OrdTime, OrdPtnCode, BnsTpCode, IsuNo,
                      IsuNm, OrdQty]
+        OrderSessionEventHandler.query_state = 0
         return order_res
 
     def revise_order(self, login_gb="", account_nm="", order_pw="",
@@ -438,4 +439,5 @@ class OrderXing(object):
 
         order_res = [OrdNo, PrntOrdNo, OrdTime, OrdPtnCode, BnsTpCode, IsuNo,
                      IsuNm, OrdQty, OrdPrc, OrdprcPtnCode, OrdCndiTpCode]
+        OrderSessionEventHandler.query_state = 0
         return order_res
