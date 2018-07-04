@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 """
-Xing API trade module
+Xing API order module
 """
 import win32com.client
 import pythoncom
