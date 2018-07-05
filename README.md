@@ -40,7 +40,18 @@ Login to ebestsec homepage and download xing API(latest version).
 Sample code is in this file:  
 ```
 pythonxingapi/sample.py
+```  
+
+Sample stock list is in this file:  
 ```
+pythonxingapi/sample_stklist.xlsx  
+```  
+
+**!!! Stock code(GICODE) should always start with 'A'!!!**  
+```
+A005930(A + 005930(original code))
+``` 
+
 ### contact
 ---
 If you have any questions or requests please send email to:  
