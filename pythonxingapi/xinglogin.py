@@ -3,7 +3,6 @@
 Xing API login module
 """
 
-import sys
 import win32com.client
 import pythoncom
 
