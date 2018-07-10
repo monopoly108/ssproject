@@ -2,7 +2,9 @@
 
 import time
 
+import datetime as dt
 import pandas as pd
+from dateutil import relativedelta
 
 import pythonxingapi.xinglogin as xinglogin
 import pythonxingapi.xingrequest as xingrequest
@@ -41,3 +43,54 @@ print(account_res)
 stk_list = pd.read_excel("sample_stklist.xlsx", "Sheet1", header=0)[
     "GICODE"].tolist()
 print(stk_list)
+
+# test(It will be modified.)
+
+
+def time_to_sec(x):
+    """
+    Time format %H%M%S to seconds
+
+    :param x:
+    :return:
+    """
+    h, m, s = x.split(':')
+    return int(h) * 3600 + int(m) * 60 + int(s)
+
+"""
+trading_end_gb = 0
+trading_result_gb = 0
+
+start_time = dt.datetime.now()
+start_time_hms = start_time.strftime("%H%M%S")
+start_time_plus_ten = start_time + relativedelta.relativedelta(seconds=601)
+request_num = 0
+
+if ("090000" <= start_time_hms < "154500") and (trading_end_gb == 0):
+    # trading time
+    print("Trading time.")
+    '''
+    Trading Logic Function
+    '''
+    request_num += 1
+
+    # for xing API requests can only be sent 200 times within 10 minutes.
+    if request_num >= 199:
+        sleep_sec = (start_time_plus_ten - dt.datetime.now())
+        sleep_sec = time_to_sec(str(sleep_sec).split('.')[0])
+        time.sleep(sleep_sec)
+
+    if start_time_hms >= "153001":
+        trading_end_gb = 1
+
+elif ("154500" <= start_time_hms < "160000") and trading_result_gb == 0:
+    # report time
+    print("Reporting time.")
+    '''
+    Reporting Function
+    '''
+    trading_result_gb = 1
+
+else:
+    pass
+"""
