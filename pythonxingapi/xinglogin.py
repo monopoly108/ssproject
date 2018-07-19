@@ -36,7 +36,7 @@ class LoginSessionEventHandler(object):
             LoginSessionEventHandler.login_state = 1
         else:
             print("Login Failed!")
-            LoginSessionEventHandler.login_state = 2
+            LoginSessionEventHandler.login_state = -1
 
 
 class ConnectXing(object):
@@ -93,7 +93,7 @@ class ConnectXing(object):
                 pythoncom.PumpWaitingMessages()
 
             # if login fails exit
-            if LoginSessionEventHandler.login_state == 2:
+            if LoginSessionEventHandler.login_state == -1:
                 exit()
             print("Test Server Connected")
 
@@ -128,7 +128,7 @@ class ConnectXing(object):
                 pythoncom.PumpWaitingMessages()
 
             # if login fails exit
-            if LoginSessionEventHandler.login_state == 2:
+            if LoginSessionEventHandler.login_state == -1:
                 exit()
             print("Real Server Connected")
 

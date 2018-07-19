@@ -22,6 +22,7 @@ login = xinglogin.ConnectXing(xing_id=ebestsec_id, xing_pw=ebestsec_pw,
                               cert_pw=cert_pw, login_gb=login_gb)
 login.login_xing()
 account_num = login.get_account_num()[0]  # account number
+print(account_num)
 
 # 2.request
 request = xingrequest.RequestXing(res_file_nm=resfilenm)
