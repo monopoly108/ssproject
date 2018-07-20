@@ -6,10 +6,11 @@ request function: 단일데이터 조회
 request2 function: 반복데이터 조회
 """
 
-import win32com.client
-import pythoncom
+import time
 
 import pandas as pd
+import pythoncom
+import win32com.client
 
 
 class RequestSessionEventHandler(object):
@@ -53,6 +54,7 @@ class RequestXing(object):
     _IN_BLOCK = "tmpnmInBlock"
     _IN_BLOCK1 = "tmpnmInBlock1"
     _OUT_BLOCK = "tmpnmOutBlock"
+    _OUT_BLOCK1 = "tmpnmOutBlock1"
     _OUT_BLOCK2 = "tmpnmOutBlock2"
     _OUT_BLOCK3 = "tmpnmOutBlock3"
 
@@ -399,7 +401,7 @@ class RequestXing(object):
             while RequestSessionEventHandler.query_state == 0:
                 pythoncom.PumpWaitingMessages()
 
-            for i in range(10):
+            for i in range(count):
                 OrdDt = query.GetFieldData(
                     self._OUT_BLOCK3.replace("tmpnm", res_id), "OrdDt", i)
                 account_df.loc[i, "OrdDt"] = OrdDt  # 주문일자
@@ -498,8 +500,8 @@ class RequestXing(object):
                            0, str(account_num))
         query.SetFieldData(self._IN_BLOCK1.replace("tmpnm", res_id), "Pwd",
                            0, str(order_pw))
-        query.SetFieldData(self._IN_BLOCK1.replace("tmpnm", res_id), "BalCreTp",
-                           0, str(balance_gb))
+        query.SetFieldData(self._IN_BLOCK1.replace("tmpnm", res_id),
+                           "BalCreTp", 0, str(balance_gb))
         query.SetFieldData(self._IN_BLOCK1.replace("tmpnm", res_id),
                            "CmsnAppTpCode", 0, str(fee_gb))
         query.SetFieldData(self._IN_BLOCK1.replace("tmpnm", res_id),
@@ -544,7 +546,7 @@ class RequestXing(object):
             while RequestSessionEventHandler.query_state == 0:
                 pythoncom.PumpWaitingMessages()
 
-            for i in range(10):
+            for i in range(count):
                 IsuNo = query.GetFieldData(
                     self._OUT_BLOCK3.replace("tmpnm", res_id), "IsuNo", i)
                 account_df.loc[i, "IsuNo"] = IsuNo
@@ -571,3 +573,390 @@ class RequestXing(object):
         final_df = final_df[final_df["IsuNo"] != ""]
         RequestSessionEventHandler.query_state = 0
         return final_df
+
+    # ************************** newly added request **************************
+
+    def request2_margin(self, mkt_gb="", margin_rate="", credit_gb="",
+                        gicode="",  res_id="t1411"):
+        """
+        Load margin rate of stocks
+
+        Parameters
+        ----------
+        :param mkt_gb:
+        0: All
+        1:KOSPI
+        2:KOSDAQ
+        :param margin_rate:
+        1) no credit
+        100
+        20
+        30
+        40
+        50
+        2) with credit
+        100
+        45
+        50
+        :param credit_gb:
+        1: no credit
+        2: with credit
+        :param gicode: stock code
+        :param res_id: t1411
+
+        Returns
+        -------
+        :return:
+        1) gicode not null: outblock
+            jkrate
+            sjkrate
+        2) gicode null: outblock1
+        """
+        if str(mkt_gb) not in ['0', '1', '2']:
+            print("mkt_gb should be in ['0', '1', '2']")
+            return None
+        elif str(credit_gb) not in ['1', '2']:
+            print("credit_gb should be in ['0', '1']")
+            return None
+        elif (str(credit_gb) == '1') and (str(margin_rate) not in ['100', '20',
+                                                                   '30', '40',
+                                                                   '50']):
+            print("margin_rate should be in ['100', '20', '30', '40', '50']"
+                  "for credit_gb '1'")
+            return None
+        elif (str(credit_gb) == '2') and (str(margin_rate) not in ['100', '45',
+                                                                   '50']):
+            print("margin_rate should be in ['100', '45', '50']"
+                  "for credit_gb '2'")
+            return None
+        else:
+            if gicode != "":
+                result_df = pd.DataFrame(columns=["gicode", "jkrate",
+                                                  "sjkrate"])
+
+                query = win32com.client.DispatchWithEvents(
+                    self._QUERY_NM, RequestSessionEventHandler)
+                query.ResFileName = self.res_file_nm.replace("tmpnm", res_id)
+                query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                   "shcode", 0, str(gicode[1:]))
+                query.Request(0)
+
+                while RequestSessionEventHandler.query_state == 0:
+                    pythoncom.PumpWaitingMessages()
+
+                jkrate = query.GetFieldData(
+                    self._OUT_BLOCK.replace("tmpnm", res_id), "jkrate", 0)
+                sjkrate = query.GetFieldData(
+                    self._OUT_BLOCK.replace("tmpnm", res_id), "sjkrate", 0)
+
+                result_df.loc[0, "gicode"] = gicode
+                result_df.loc[0, "jkrate"] = jkrate
+                result_df.loc[0, "sjkrate"] = sjkrate
+                RequestSessionEventHandler.query_state = 0
+
+                return result_df
+
+            else:
+                result_df = pd.DataFrame(columns=["gicode", "stk_nm",
+                                                  "jkrate", "sjkrate"])
+                temp_df = pd.DataFrame(columns=["gicode", "stk_nm",
+                                                "jkrate", "sjkrate"])
+
+                query = win32com.client.DispatchWithEvents(
+                    self._QUERY_NM, RequestSessionEventHandler)
+                query.ResFileName = self.res_file_nm.replace("tmpnm", res_id)
+                query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                   "gubun", 0, str(mkt_gb))
+                query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                   "jkrate", 0, str(margin_rate) + "%")
+                query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                   "jongchk", 0, str(credit_gb))
+                query.Request(0)
+
+                while RequestSessionEventHandler.query_state == 0:
+                    pythoncom.PumpWaitingMessages()
+
+                count = query.GetBlockCount(
+                    self._OUT_BLOCK1.replace("tmpnm", res_id))
+                # idx value for next request
+                init_idx = int(query.GetFieldData(
+                    self._OUT_BLOCK.replace("tmpnm", res_id), "idx", 0))
+
+                for i in range(count):
+                    shcode = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "shcode", i)
+                    temp_df.loc[i, "gicode"] = shcode
+                    hname = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "hname", i)
+                    temp_df.loc[i, "stk_nm"] = hname
+                    jkrate = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "jkrate", i)
+                    temp_df.loc[i, "jkrate"] = jkrate
+                    sjkrate = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "sjkrate",
+                        i)
+                    temp_df.loc[i, "sjkrate"] = sjkrate
+                result_df = result_df.append(temp_df, ignore_index=True)
+
+                # request when the # of data is above 40
+                idx = init_idx
+                req_cnt = 0
+                while query.IsNext is True:
+                    RequestSessionEventHandler.query_state = 0
+                    query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                       "idx", 0, idx)
+                    query.Request(1)
+                    req_cnt += 1
+
+                    while RequestSessionEventHandler.query_state == 0:
+                        pythoncom.PumpWaitingMessages()
+
+                    # idx value for next request
+                    idx2 = int(query.GetFieldData(
+                        self._OUT_BLOCK.replace("tmpnm", res_id), "idx", 0))
+                    idx += (idx2 - idx)
+
+                    for i in range(count):
+                        shcode = query.GetFieldData(
+                            self._OUT_BLOCK1.replace("tmpnm", res_id),
+                            "shcode", i)
+                        temp_df.loc[i, "gicode"] = shcode
+                        hname = query.GetFieldData(
+                            self._OUT_BLOCK1.replace("tmpnm", res_id),
+                            "hname", i)
+                        temp_df.loc[i, "stk_nm"] = hname
+                        jkrate = query.GetFieldData(
+                            self._OUT_BLOCK1.replace("tmpnm", res_id),
+                            "jkrate", i)
+                        temp_df.loc[i, "jkrate"] = jkrate
+                        sjkrate = query.GetFieldData(
+                            self._OUT_BLOCK1.replace("tmpnm", res_id),
+                            "sjkrate",
+                            i)
+                        temp_df.loc[i, "sjkrate"] = sjkrate
+                    if req_cnt % 4 == 0:
+                        time.sleep(1)
+                    result_df = result_df.append(temp_df, ignore_index=True)
+
+                result_df.drop_duplicates(["gicode"], inplace=True)
+                result_df["gicode"] = result_df["gicode"].apply(lambda x:
+                                                                'A' + str(x))
+                result_df.reset_index(drop=True, inplace=True)
+                result_df.drop(result_df.index[[len(result_df) - 1]],
+                               inplace=True)
+                RequestSessionEventHandler.query_state = 0
+                return result_df
+
+    def request2_top_trd_amt(self, mkt_gb, dt_gb, jc_num, req_num='1',
+                             reverse='0', res_id='t1463'):
+        """
+        Load top trading amount stocks
+
+        Parameters
+        ----------
+        :param mkt_gb:
+        0: All
+        1: KOSPI
+        2: KOSDAQ
+        :param dt_gb:
+        0: today
+        1: pday
+        :param jc_num: param type = list / stock type not to request
+        대상제외값
+        (0x00000080)관리종목  => 000000000128
+        (0x00000100)시장경보  => 000000000256
+        (0x00000200)거래정지  => 000000000512
+        (0x00004000)우선주  => 000000016384
+        (0x00200000)증거금50  => 000008388608
+        (0x01000000)정리매매  => 000016777216
+        (0x04000000)투자유의  => 000067108864
+        (0x80000000)불성실공시  => -02147483648
+        두개 이상 제외시 해당 값을 합산.
+        ex)관리종목 + 시장경보 = 000000000128 + 000000000256 = 000000000384
+        :param req_num: # of times to request
+        ex)
+        1: top20
+        2: top40
+        :param reverse:
+        0: descending
+        1: ascending
+        :param res_id: t1463
+
+        Returns
+        -------
+        :return:
+        gicode
+        stk_nm
+        volume cumulative trading volume
+        value cumulative trading amount
+        """
+        if type(jc_num) != list:
+            print("jc_num should be list type.")
+            return None
+        elif str(mkt_gb) not in ['0', '1', '2']:
+            print("mkt_gb should be in ['0', '1', '2']")
+            return None
+        elif str(dt_gb) not in ['0', '1']:
+            print("dt_gb should be in ['0', '1']")
+            return None
+        else:
+            if str(req_num) == '1':
+                result_df = pd.DataFrame(columns=["gicode", "stk_nm",
+                                                  "volume", "value"])
+
+                query = win32com.client.DispatchWithEvents(
+                    self._QUERY_NM, RequestSessionEventHandler)
+                query.ResFileName = self.res_file_nm.replace("tmpnm", res_id)
+                query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                   "gubun", 0, str(mkt_gb))
+                query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                   "jnilgubun", 0, str(dt_gb))
+                if len(jc_num) == 0:
+                    pass
+                else:
+                    sum_jc_num = sum(jc_num)
+                    query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                       "jc_num", 0, str(sum_jc_num))
+                query.Request(0)
+
+                while RequestSessionEventHandler.query_state == 0:
+                    pythoncom.PumpWaitingMessages()
+
+                count = query.GetBlockCount(
+                    self._OUT_BLOCK1.replace("tmpnm", res_id))
+                for i in range(count):
+                    shcode = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "shcode", i)
+                    result_df.loc[i, "gicode"] = shcode
+                    hname = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "hname", i)
+                    result_df.loc[i, "stk_nm"] = hname
+                    volume = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "volume", i)
+                    result_df.loc[i, "volume"] = int(volume)
+                    value = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "value", i)
+                    result_df.loc[i, "value"] = int(value)
+
+                if str(reverse) == '0':
+                    result_df["gicode"] = result_df["gicode"].apply(lambda x:
+                                                                'A' + str(x))
+                    result_df.sort(['value'], ascending=[0], axis=0,
+                                   inplace=True)
+                    RequestSessionEventHandler.query_state = 0
+                    return result_df
+
+                elif str(reverse) == '1':
+                    result_df["gicode"] = result_df["gicode"].apply(lambda x:
+                                                                'A' + str(x))
+                    result_df.sort(['value'], ascending=[1], axis=0,
+                                   inplace=True)
+                    RequestSessionEventHandler.query_state = 0
+                    return result_df
+
+            else:
+                result_df = pd.DataFrame(columns=["gicode", "stk_nm",
+                                                  "volume", "value"])
+                temp_df = pd.DataFrame(columns=["gicode", "stk_nm",
+                                                "volume", "value"])
+                req_cnt = 0
+
+                query = win32com.client.DispatchWithEvents(
+                    self._QUERY_NM, RequestSessionEventHandler)
+                query.ResFileName = self.res_file_nm.replace("tmpnm", res_id)
+                query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                   "gubun", 0, str(mkt_gb))
+                query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                   "jnilgubun", 0, str(dt_gb))
+                if len(jc_num) == 0:
+                    pass
+                else:
+                    sum_jc_num = sum(jc_num)
+                    query.SetFieldData(self._IN_BLOCK.replace("tmpnm", res_id),
+                                       "jc_num", 0, str(sum_jc_num))
+                query.Request(0)
+
+                while RequestSessionEventHandler.query_state == 0:
+                    pythoncom.PumpWaitingMessages()
+                req_cnt += 1
+
+                count = query.GetBlockCount(
+                    self._OUT_BLOCK1.replace("tmpnm", res_id))
+                # idx value for next request
+                init_idx = int(query.GetFieldData(
+                    self._OUT_BLOCK.replace("tmpnm", res_id), "idx", 0))
+                for i in range(count):
+                    shcode = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "shcode", i)
+                    temp_df.loc[i, "gicode"] = shcode
+                    hname = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "hname", i)
+                    temp_df.loc[i, "stk_nm"] = hname
+                    volume = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "volume", i)
+                    temp_df.loc[i, "volume"] = int(volume)
+                    value = query.GetFieldData(
+                        self._OUT_BLOCK1.replace("tmpnm", res_id), "value", i)
+                    temp_df.loc[i, "value"] = int(value)
+                result_df = result_df.append(temp_df, ignore_index=True)
+
+                # request when the # of data is above 40
+                idx = init_idx
+                while query.IsNext is True:
+                    if req_cnt == int(req_num):
+                        break
+                    else:
+                        RequestSessionEventHandler.query_state = 0
+                        query.SetFieldData(
+                            self._IN_BLOCK.replace("tmpnm", res_id), "idx", 0,
+                            idx)
+                        query.Request(1)
+
+                        while RequestSessionEventHandler.query_state == 0:
+                            pythoncom.PumpWaitingMessages()
+
+                        # idx value for next request
+                        idx2 = int(query.GetFieldData(
+                            self._OUT_BLOCK.replace("tmpnm", res_id), "idx",
+                            0))
+                        idx += (idx2 - idx)
+
+                        for i in range(count):
+                            shcode = query.GetFieldData(
+                                self._OUT_BLOCK1.replace("tmpnm", res_id),
+                                "shcode", i)
+                            temp_df.loc[i, "gicode"] = shcode
+                            hname = query.GetFieldData(
+                                self._OUT_BLOCK1.replace("tmpnm", res_id),
+                                "hname", i)
+                            temp_df.loc[i, "stk_nm"] = hname
+                            volume = query.GetFieldData(
+                                self._OUT_BLOCK1.replace("tmpnm", res_id),
+                                "volume", i)
+                            temp_df.loc[i, "volume"] = int(volume)
+                            value = query.GetFieldData(
+                                self._OUT_BLOCK1.replace("tmpnm", res_id),
+                                "value", i)
+                            temp_df.loc[i, "value"] = int(value)
+                        req_cnt += 1
+                        if req_cnt % 4 == 0:
+                            time.sleep(1)
+                        result_df = result_df.append(temp_df,
+                                                     ignore_index=True)
+                if str(reverse) == '0':
+                    result_df.drop_duplicates(["gicode"], inplace=True)
+                    result_df["gicode"] = result_df["gicode"].apply(lambda x:
+                                                                'A' + str(x))
+                    result_df.sort(['value'], ascending=[0], axis=0,
+                                   inplace=True)
+                    RequestSessionEventHandler.query_state = 0
+                    return result_df
+
+                elif str(reverse) == '1':
+                    result_df.drop_duplicates(["gicode"], inplace=True)
+                    result_df["gicode"] = result_df["gicode"].apply(lambda x:
+                                                                'A' + str(x))
+                    result_df.sort(['value'], ascending=[1], axis=0,
+                                   inplace=True)
+                    RequestSessionEventHandler.query_state = 0
+                    return result_df

@@ -9,6 +9,9 @@ from dateutil import relativedelta
 import pythonxingapi.xinglogin as xinglogin
 import pythonxingapi.xingrequest as xingrequest
 
+pd.set_option("display.max_columns", 10000)
+pd.set_option("display.max_rows", 10000)
+
 # 0.basic info
 resfilenm = "C:\\eBEST\\xingAPI\\Res\\tmpnm.res"  # res file dir + file_name
 ebestsec_id = ""  # your id
@@ -27,18 +30,29 @@ print(account_num)
 # 2.request
 request = xingrequest.RequestXing(res_file_nm=resfilenm)
 
-
-# trade result
+# request trade result
 trade_res = request.request2_account_trade_result(account_num=account_num,
                                                   order_pw=account_pw,
                                                   trd_dt="20180704")
 print(trade_res)
 
 time.sleep(1)
-# account portfolio status
+# request account portfolio status
 account_res = request.request2_account_result(account_num=account_num,
                                               order_pw=account_pw)
 print(account_res)
+
+
+# request margin for stocks
+margin = request.request2_margin(mkt_gb=1, margin_rate=20, credit_gb=1)
+print(margin)
+
+# request trading volume
+jc_num_list = []
+trd_amt = request.request2_top_trd_amt('0', '0', jc_num_list, reverse=0,
+                                       req_num=2)
+print(trd_amt)
+
 
 # 3. trade
 stk_list = pd.read_excel("sample_stklist.xlsx", "Sheet1", header=0)[
@@ -57,6 +71,7 @@ def time_to_sec(x):
     """
     h, m, s = x.split(':')
     return int(h) * 3600 + int(m) * 60 + int(s)
+
 
 """
 trading_end_gb = 0
