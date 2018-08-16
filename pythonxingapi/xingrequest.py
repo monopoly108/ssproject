@@ -99,7 +99,7 @@ class RequestXing(object):
                                     "volume", 0)
 
         prc_df.loc[0, "name"] = name
-        prc_df.loc[0, "price"] = price
+        prc_df.loc[0, "prc"] = price
         prc_df.loc[0, "volume"] = volume
         RequestSessionEventHandler.query_state = 0
 
